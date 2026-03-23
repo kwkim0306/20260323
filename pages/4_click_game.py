@@ -1,13 +1,50 @@
 import streamlit as st
 import time
 import random
+import json
+import os
+from datetime import datetime
 
 st.set_page_config(page_title="클릭 게임", layout="wide")
 st.title("🎯 마우스 클릭 게임")
 
 st.write("화면에 나타나는 버튼들을 빠르게 클릭해서 점수를 얻으세요!")
 
-# 세션 상태 초기화
+# 점수 저장 파일 경로
+SCORES_FILE = os.path.join(os.path.dirname(__file__), '..', 'data', 'game_scores.json')
+
+# 데이터 디렉토리 생성
+os.makedirs(os.path.dirname(SCORES_FILE), exist_ok=True)
+
+# 점수 로드 함수
+def load_scores():
+    if os.path.exists(SCORES_FILE):
+        try:
+            with open(SCORES_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except:
+            return []
+    return []
+
+# 점수 저장 함수
+def save_score(score, player_name="플레이어"):
+    scores = load_scores()
+    new_score = {
+        'score': score,
+        'player': player_name,
+        'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        'date': datetime.now().strftime('%Y-%m-%d')
+    }
+    scores.append(new_score)
+
+    # 점수로 정렬 (내림차순)
+    scores.sort(key=lambda x: x['score'], reverse=True)
+
+    # 상위 10개만 유지
+    scores = scores[:10]
+
+    with open(SCORES_FILE, 'w', encoding='utf-8') as f:
+        json.dump(scores, f, ensure_ascii=False, indent=2)
 if 'game_started' not in st.session_state:
     st.session_state.game_started = False
 if 'score' not in st.session_state:
@@ -32,13 +69,15 @@ def start_game():
 # 게임 종료 함수
 def end_game():
     st.session_state.game_started = False
-    if st.session_state.score > st.session_state.high_score:
-        st.session_state.high_score = st.session_state.score
+    if st.session_state.score > 0:  # 점수가 0보다 크면 저장
+        save_score(st.session_state.score)
+        if st.session_state.score > st.session_state.high_score:
+            st.session_state.high_score = st.session_state.score
 
 # 버튼 생성 함수
 def generate_buttons():
     st.session_state.buttons = []
-    for i in range(5):  # 5개의 버튼 생성
+    for i in range(3):  # 3개의 버튼으로 줄임 (쉬워짐)
         button_id = f"btn_{i}_{random.randint(1000, 9999)}"
         st.session_state.buttons.append({
             'id': button_id,

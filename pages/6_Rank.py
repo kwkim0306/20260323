@@ -90,6 +90,17 @@ with col2:
     if st.button("🔄 랭킹 새로고침", use_container_width=True):
         st.rerun()
 
+    # 디버깅 정보
+    with st.expander("🔧 디버깅 정보"):
+        st.write(f"점수 파일 경로: `{SCORES_FILE}`")
+        st.write(f"파일 존재: {os.path.exists(SCORES_FILE)}")
+        if os.path.exists(SCORES_FILE):
+            st.write(f"저장된 점수 개수: {len(scores)}")
+            if scores:
+                st.json(scores[:3])  # 상위 3개만 표시
+        else:
+            st.warning("점수 파일이 존재하지 않습니다. 게임을 먼저 플레이해보세요!")
+
     # 점수 초기화 버튼 (관리용)
     if st.button("🗑️ 랭킹 초기화", use_container_width=True, type="secondary"):
         if os.path.exists(SCORES_FILE):
